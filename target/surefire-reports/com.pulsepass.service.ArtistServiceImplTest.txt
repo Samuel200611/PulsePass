@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.pulsepass.service.ArtistServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.27 s -- in com.pulsepass.service.ArtistServiceImplTest

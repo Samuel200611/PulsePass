@@ -1,0 +1,15 @@
+com\pulsepass\FlywayMigrationIT.class
+com\pulsepass\TicketRepositoryIT.class
+com\pulsepass\AbstractIntegrationTest.class
+com\pulsepass\service\UserServiceImplTest.class
+com\pulsepass\service\pricing\TicketPricingPolicyTest.class
+com\pulsepass\service\TicketServiceImplTest.class
+com\pulsepass\PersistenceTestSupport.class
+com\pulsepass\service\ArtistServiceImplTest.class
+com\pulsepass\service\VenueServiceImplTest.class
+com\pulsepass\EventArtistIT.class
+com\pulsepass\EventSearchIT.class
+com\pulsepass\UserProfileIT.class
+com\pulsepass\service\EventServiceImplTest.class
+com\pulsepass\EventRepositoryIT.class
+com\pulsepass\VenuePersistenceTest.class
