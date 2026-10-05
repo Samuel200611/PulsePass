@@ -1,45 +1,45 @@
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\Artist.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\Event.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\EventCategory.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\EventStatus.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\Ticket.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\TicketStatus.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\TicketType.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\User.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\UserProfile.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\domain\Venue.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\request\CreateEventRequest.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\request\PurchaseTicketRequest.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\request\RegisterUserRequest.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\response\ArtistResponse.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\response\EventResponse.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\response\EventSummaryResponse.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\response\TicketResponse.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\response\UserResponse.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\dto\response\VenueResponse.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\exception\BusinessRuleException.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\exception\DuplicateResourceException.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\exception\ResourceNotFoundException.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\mapper\ArtistMapper.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\mapper\EventMapper.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\mapper\TicketMapper.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\mapper\UserMapper.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\mapper\VenueMapper.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\PulsePassApplication.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\repository\ArtistRepository.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\repository\EventRepository.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\repository\TicketRepository.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\repository\UserProfileRepository.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\repository\UserRepository.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\repository\VenueRepository.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\ArtistService.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\EventService.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\impl\ArtistServiceImpl.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\impl\EventServiceImpl.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\impl\TicketServiceImpl.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\impl\UserServiceImpl.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\impl\VenueServiceImpl.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\pricing\TicketPricingPolicy.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\TicketService.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\UserService.java
-C:\Users\User\Downloads\pulsepass servicio\pulsepass\src\main\java\com\pulsepass\service\VenueService.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\Artist.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\Event.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\EventCategory.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\EventStatus.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\Ticket.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\TicketStatus.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\TicketType.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\User.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\UserProfile.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\domain\Venue.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\request\CreateEventRequest.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\request\PurchaseTicketRequest.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\request\RegisterUserRequest.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\response\ArtistResponse.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\response\EventResponse.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\response\EventSummaryResponse.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\response\TicketResponse.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\response\UserResponse.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\dto\response\VenueResponse.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\exception\BusinessRuleException.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\exception\DuplicateResourceException.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\exception\ResourceNotFoundException.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\mapper\ArtistMapper.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\mapper\EventMapper.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\mapper\TicketMapper.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\mapper\UserMapper.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\mapper\VenueMapper.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\PulsePassApplication.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\repository\ArtistRepository.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\repository\EventRepository.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\repository\TicketRepository.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\repository\UserProfileRepository.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\repository\UserRepository.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\repository\VenueRepository.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\ArtistService.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\EventService.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\impl\ArtistServiceImpl.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\impl\EventServiceImpl.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\impl\TicketServiceImpl.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\impl\UserServiceImpl.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\impl\VenueServiceImpl.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\pricing\TicketPricingPolicy.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\TicketService.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\UserService.java
+C:\Users\yolvi\OneDrive\Desktop\Taller\PulsePass\src\main\java\com\pulsepass\service\VenueService.java
