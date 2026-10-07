@@ -1,4 +1,4 @@
-# PulsePass — Capa de persistencia
+# PulsePass 
 
 Plataforma de eventos, artistas y entradas. Este repositorio implementa
 únicamente la **capa de persistencia** definida en el PRD: modelo relacional,
