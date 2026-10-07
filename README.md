@@ -394,7 +394,112 @@ mvn clean test
 
 ---
 
-## 11. Trazabilidad de las pruebas de persistencia
+## 11. Capa de controladores
+
+Expone los 20 métodos públicos de la capa de servicio como una API REST:
+`VenueController`, `EventController`, `ArtistController`, `UserController`
+y `TicketController`, todos en `controller/`, dependiendo únicamente de las
+interfaces `Service` (nunca de un `Repository` ni de una entidad JPA).
+
+### Endpoints
+
+| Método | Endpoint | Service | Éxito |
+|---|---|---|---|
+| GET | `/api/venues/{code}` | `VenueService.findByCode` | 200 |
+| GET | `/api/venues/active` | `VenueService.findActiveVenues` | 200 |
+| POST | `/api/events` | `EventService.create` | 201 |
+| GET | `/api/events/{eventCode}` | `EventService.findByCode` | 200 |
+| GET | `/api/events/published` | `EventService.findPublishedEvents` | 200 |
+| PATCH | `/api/events/{eventCode}/publish` | `EventService.publish` | 200 |
+| POST | `/api/events/{eventCode}/artists/{artistId}` | `EventService.addArtist` | 200 |
+| GET | `/api/events/by-artist?stageName=...` | `EventService.findByArtist` | 200 |
+| GET | `/api/events/{eventCode}/tickets/paid` | `TicketService.findPaidTicketsByEvent` | 200 |
+| GET | `/api/artists/{id}` | `ArtistService.findById` | 200 |
+| GET | `/api/artists/by-stage-name?stageName=...` | `ArtistService.findByStageName` | 200 |
+| GET | `/api/artists/active` | `ArtistService.findActiveArtists` | 200 |
+| POST | `/api/users` | `UserService.register` | 201 |
+| GET | `/api/users/by-email?email=...` | `UserService.findByEmail` | 200 |
+| GET | `/api/users/by-username?username=...` | `UserService.findByUsername` | 200 |
+| POST | `/api/tickets` | `TicketService.purchase` | 201 |
+| GET | `/api/tickets/{ticketCode}` | `TicketService.findByCode` | 200 |
+| GET | `/api/tickets/by-user?email=...` | `TicketService.findByUserEmail` | 200 |
+| PATCH | `/api/tickets/{ticketCode}/cancel` | `TicketService.cancel` | 200 |
+| PATCH | `/api/tickets/{ticketCode}/use` | `TicketService.markAsUsed` | 200 |
+
+**Decisión de diseño — `GET /api/events/{eventCode}/tickets/paid`:** la
+sección 8.5 del PRD lo lista bajo "TicketController / EventController" sin
+decidir cuál. Como la ruta cuelga de `/api/events`, lo expuse en
+`EventController`, que para este único endpoint depende también de
+`TicketService` (inyectado junto a `EventService`). Esto no viola
+NFR-CTRL-004: sigue siendo el Service correcto para la operación, solo que
+el Controller que lo hospeda es el dueño del namespace de la URL.
+
+### Validación (Bean Validation) vs. reglas de negocio
+
+Las anotaciones en los `request` (`@NotBlank`, `@Email`, `@NotNull`, `@Min`,
+`@Size`) se evalúan **antes** de invocar al Service — si fallan, el Service
+nunca se llama (verificado en los tests con
+`verify(service, never()).metodo(any())`, QT-CTRL-007). Las reglas de
+negocio (usuario activo, evento publicado, edad mínima, capacidad,
+duplicados) siguen exclusivamente en la capa Service, tal como las dejó la
+Fase 2; el Controller no las reimplementa (CTRL-001, CTRL-006).
+
+### Manejo de errores
+
+`GlobalExceptionHandler` (`@RestControllerAdvice`) es el único lugar que
+traduce excepciones a HTTP — ningún Controller tiene `try/catch` (CTRL-007):
+
+| Excepción | HTTP | `error` |
+|---|---|---|
+| `MethodArgumentNotValidException` (`@Valid` falla) | 400 | `Bad Request` (con `details` por campo) |
+| `HttpMessageNotReadableException` (JSON mal formado) | 400 | `Bad Request` |
+| `ResourceNotFoundException` | 404 | `Not Found` |
+| `DuplicateResourceException` | 409 | `Conflict` |
+| `BusinessRuleException` | 409 | `Conflict` |
+| Cualquier otra excepción | 500 | `Internal Server Error` (mensaje genérico fijo, sin stack trace — NFR-CTRL-007) |
+
+Todos los errores usan el mismo contrato (`ErrorResponse`):
+
+```json
+{
+  "timestamp": "2026-10-05T20:00:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Event not found: CMF-2026",
+  "details": {}
+}
+```
+
+### Unit tests de Controller
+
+Bajo `src/test/java/com/pulsepass/controller`, con `@WebMvcTest` +
+`@MockitoBean` — **sin** `@SpringBootTest`, sin PostgreSQL, sin
+Testcontainers (NFR-CTRL-002). `@WebMvcTest(XController.class)` carga solo
+esa clase, sus `@ControllerAdvice` (`GlobalExceptionHandler` incluido) y la
+infraestructura MVC; los Services se reemplazan con `@MockitoBean`.
+
+| Archivo | Cubre |
+|---|---|
+| `VenueControllerTest` | TEST-CTRL-VEN-001..003 |
+| `ArtistControllerTest` | TEST-CTRL-ART-001..004 |
+| `EventControllerTest` | TEST-CTRL-EVT-001..009 + tickets pagados del evento |
+| `UserControllerTest` | TEST-CTRL-USR-001..005 |
+| `TicketControllerTest` | TEST-CTRL-TKT-001..006, 008..011 |
+
+Cada test sigue `when(...)` → `mockMvc.perform(...)` →
+`andExpect(status()...)` / `jsonPath(...)` → `verify(...)`, y los casos de
+validación fallida verifican `verify(service, never()).metodo(any())` para
+probar que el request nunca llegó al Service.
+
+Ejecutar:
+
+```bash
+mvn clean test
+```
+
+---
+
+## 12. Trazabilidad de las pruebas de persistencia
 
 Las pruebas de integración están separadas por repository, un archivo por
 clase, todas bajo `src/test/java/com/pulsepass` y heredando de
