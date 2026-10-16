@@ -1,6 +1,9 @@
 package com.pulsepass.controller;
 
 import com.pulsepass.exception.GlobalExceptionHandler;
+import com.pulsepass.security.WithMockSecurityPrincipal;
+import com.pulsepass.service.AuthService;
+import com.pulsepass.service.AuthorizationService;
 import org.springframework.context.annotation.Import;
 import tools.jackson.databind.ObjectMapper;
 import com.pulsepass.dto.request.RegisterUserRequest;
@@ -42,6 +45,12 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private AuthService authService;
+
+    @MockitoBean
+    private AuthorizationService authorizationService;
+
     private RegisterUserRequest validRequest() {
         return new RegisterUserRequest("andrea", "andrea@email.com",
                 "Andrea", "Gomez", "3001112233", "Santa Marta",
@@ -71,7 +80,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email").value("andrea@email.com"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        verify(userService).register(any(RegisterUserRequest.class));
+        verify(authService).register(any(RegisterUserRequest.class));
+        verify(userService, never()).register(any());
     }
 
     // ---------------------------------------------------------
@@ -81,8 +91,8 @@ class UserControllerTest {
     @Test
     void shouldReturn400WhenEmailIsInvalid() throws Exception {
         RegisterUserRequest invalidEmail = new RegisterUserRequest("andrea",
-                "not-an-email", "Andrea", "Gomez", "3001112233",
-                "Santa Marta", LocalDate.of(2001, 5, 12));
+                "not-an-email", "UnaFraseSeguraLarga2026!", "Andrea", "Gomez",
+                "3001112233", "Santa Marta", LocalDate.of(2001, 5, 12));
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,13 +101,29 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.details.email").exists());
 
-        verify(userService, never()).register(any());
+        verify(authService, never()).register(any());
+    }
+
+
+    @Test
+    void shouldReturn400WhenPasswordIsTooShort() throws Exception {
+        RegisterUserRequest shortPassword = new RegisterUserRequest("andrea",
+                "andrea@email.com", "corta", "Andrea", "Gomez",
+                "3001112233", "Santa Marta", LocalDate.of(2001, 5, 12));
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(shortPassword)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.password").exists());
+
+        verify(authService, never()).register(any());
     }
 
     @Test
     void shouldReturn400WhenRequiredFieldsAreMissing() throws Exception {
         RegisterUserRequest missingFields = new RegisterUserRequest("", "",
-                "", "", null, null, null);
+                "", "", null, null, null, null);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -105,11 +131,12 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.username").exists())
                 .andExpect(jsonPath("$.details.email").exists())
+                .andExpect(jsonPath("$.details.password").exists())
                 .andExpect(jsonPath("$.details.firstName").exists())
                 .andExpect(jsonPath("$.details.lastName").exists())
                 .andExpect(jsonPath("$.details.birthDate").exists());
 
-        verify(userService, never()).register(any());
+        verify(authService, never()).register(any());
     }
 
     // ---------------------------------------------------------
@@ -135,7 +162,8 @@ class UserControllerTest {
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WhenFindingByEmail() throws Exception {
+    @WithMockSecurityPrincipal(email = "andrea@email.com")
+    void shouldReturn200WhenFindingOwnEmail() throws Exception {
         when(userService.findByEmail("andrea@email.com")).thenReturn(response());
 
         mockMvc.perform(get("/api/users/by-email")
@@ -143,6 +171,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("andrea"));
 
+        verify(authorizationService).assertSelfEmailOrAdmin("andrea@email.com");
         verify(userService).findByEmail("andrea@email.com");
     }
 
@@ -161,7 +190,8 @@ class UserControllerTest {
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WhenFindingByUsername() throws Exception {
+    @WithMockSecurityPrincipal(username = "andrea")
+    void shouldReturn200WhenFindingOwnUsername() throws Exception {
         when(userService.findByUsername("andrea")).thenReturn(response());
 
         mockMvc.perform(get("/api/users/by-username")
@@ -169,6 +199,53 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("andrea"));
 
-        verify(userService).findByUsername("andrea");
+        verify(authorizationService).assertSelfUsernameOrAdmin("andrea");
+    }
+
+
+    @Test
+    @WithMockSecurityPrincipal(username = "miguel-admin", roles = "ADMIN")
+    void shouldAllowAdminToFindAnotherUsersUsername() throws Exception {
+        when(userService.findByUsername("andrea")).thenReturn(response());
+
+        mockMvc.perform(get("/api/users/by-username")
+                        .param("username", "andrea"))
+                .andExpect(status().isOk());
+
+        verify(authorizationService).assertSelfUsernameOrAdmin("andrea");
+    }
+
+    // ---------------------------------------------------------
+    // FR-SEC-USR-02 (anti-IDOR): email ajeno -> 403
+    // ---------------------------------------------------------
+
+    @Test
+    @WithMockSecurityPrincipal(email = "andrea@email.com")
+    void shouldReturn403WhenFindingAnotherUsersEmail() throws Exception {
+        org.mockito.Mockito.doThrow(
+                        new org.springframework.security.access.AccessDeniedException(
+                                "No tiene permisos para realizar esta operación"))
+                .when(authorizationService).assertSelfEmailOrAdmin("carlos@email.com");
+
+        mockMvc.perform(get("/api/users/by-email")
+                        .param("email", "carlos@email.com"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"));
+
+        verify(userService, never()).findByEmail(any());
+    }
+
+    // ---------------------------------------------------------
+    // Sin autenticacion -> 401
+    // ---------------------------------------------------------
+
+    @Test
+    void shouldReturn401WhenFindingByEmailWithoutAuthentication() throws Exception {
+        mockMvc.perform(get("/api/users/by-email").param("email", "andrea@email.com"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        verify(userService, never()).findByEmail(any());
     }
 }

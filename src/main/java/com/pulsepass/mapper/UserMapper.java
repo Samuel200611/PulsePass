@@ -5,10 +5,7 @@ import com.pulsepass.dto.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-/**
- * UserResponse combina campos de User con campos de UserProfile
- * (BR-USER-004: siempre existen juntos), por eso se navega user.profile.*.
- */
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 

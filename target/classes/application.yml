@@ -9,9 +9,6 @@ spring:
 
   jpa:
     hibernate:
-      # Restriccion tecnica del PRD: Hibernate NUNCA crea ni modifica el
-      # esquema. Solo valida que las entidades coincidan con lo que
-      # construyo Flyway. Cualquier divergencia detiene el arranque.
       ddl-auto: validate
     open-in-view: false
     properties:
@@ -19,10 +16,16 @@ spring:
         format_sql: true
 
   flyway:
-    # NFR-002 / NFR-003: Flyway es el unico responsable del esquema.
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: false
+
+pulsepass:
+  security:
+    jwt:
+      issuer: ${PULSEPASS_JWT_ISSUER:pulsepass-api}
+      secret-base64: ${PULSEPASS_JWT_SECRET_BASE64}
+      access-token-ttl: PT15M
 
 logging:
   level:

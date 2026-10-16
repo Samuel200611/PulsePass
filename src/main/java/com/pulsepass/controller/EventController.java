@@ -4,6 +4,8 @@ import com.pulsepass.dto.request.CreateEventRequest;
 import com.pulsepass.dto.response.EventResponse;
 import com.pulsepass.dto.response.EventSummaryResponse;
 import com.pulsepass.dto.response.TicketResponse;
+import com.pulsepass.exception.ResourceNotFoundException;
+import com.pulsepass.service.AuthorizationService;
 import com.pulsepass.service.EventService;
 import com.pulsepass.service.TicketService;
 import jakarta.validation.Valid;
@@ -25,12 +27,15 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
-
     private final TicketService ticketService;
+    private final AuthorizationService authorizationService;
 
-    public EventController(EventService eventService, TicketService ticketService) {
+    public EventController(EventService eventService,
+                           TicketService ticketService,
+                           AuthorizationService authorizationService) {
         this.eventService = eventService;
         this.ticketService = ticketService;
+        this.authorizationService = authorizationService;
     }
 
 
@@ -48,7 +53,13 @@ public class EventController {
     // GET /api/events/{eventCode} -> 200 OK, o 404.
     @GetMapping("/{eventCode}")
     public ResponseEntity<EventResponse> findByCode(@PathVariable String eventCode) {
-        return ResponseEntity.ok(eventService.findByCode(eventCode));
+        EventResponse response = eventService.findByCode(eventCode);
+
+        if (!authorizationService.canViewEvent(response.status())) {
+            throw new ResourceNotFoundException("Event not found: " + eventCode);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     // GET /api/events/published -> 200 OK con solo los eventos PUBLISHED.
@@ -77,7 +88,14 @@ public class EventController {
     @GetMapping("/by-artist")
     public ResponseEntity<List<EventSummaryResponse>> findByArtist(
             @RequestParam String stageName) {
-        return ResponseEntity.ok(eventService.findByArtist(stageName));
+
+        List<EventSummaryResponse> events = eventService.findByArtist(stageName);
+
+        List<EventSummaryResponse> visible = events.stream()
+                .filter(event -> authorizationService.canViewEvent(event.status()))
+                .toList();
+
+        return ResponseEntity.ok(visible);
     }
 
     // GET /api/events/{eventCode}/tickets/paid -> 200 OK.

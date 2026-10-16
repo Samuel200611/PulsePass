@@ -4,9 +4,7 @@ import com.pulsepass.dto.response.ArtistResponse;
 
 import java.util.List;
 
-/**
- * FR-SVC-009.
- */
+
 public interface ArtistService {
 
     ArtistResponse findById(Long id);

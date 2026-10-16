@@ -146,7 +146,7 @@ class UserServiceImplTest {
     void shouldRejectMissingBirthDate() {
         RegisterUserRequest withoutBirthDate = new RegisterUserRequest(
                 "andrea", "andrea@email.com", "Andrea", "Gomez",
-                "3001112233", "Santa Marta", null);
+                "3001112233", "Santa Marta", null, null);
 
         when(userRepository.existsByUsername("andrea")).thenReturn(false);
         when(userRepository.existsByEmailIgnoreCase("andrea@email.com")).thenReturn(false);

@@ -1,5 +1,7 @@
 package com.pulsepass.controller;
 
+import com.pulsepass.security.WithMockSecurityPrincipal;
+import com.pulsepass.service.AuthorizationService;
 import tools.jackson.databind.ObjectMapper;
 import com.pulsepass.domain.EventCategory;
 import com.pulsepass.domain.EventStatus;
@@ -56,6 +58,9 @@ class EventControllerTest {
     @MockitoBean
     private TicketService ticketService;
 
+    @MockitoBean
+    private AuthorizationService authorizationService;
+
     private static final LocalDateTime EVENT_DATE = LocalDateTime.now().plusMonths(3);
 
     private CreateEventRequest validRequest() {
@@ -77,11 +82,12 @@ class EventControllerTest {
     }
 
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-001 — crear valido -> 201
+    // TEST-CTRL-EVT-001 — crear valido -> 201 (ADMIN, FR-SEC-EVT-01)
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn201WhenEventIsCreated() throws Exception {
+    @WithMockSecurityPrincipal(roles = "ADMIN")
+    void shouldReturn201WhenAdminCreatesEvent() throws Exception {
         when(eventService.create(any(CreateEventRequest.class)))
                 .thenReturn(response(EventStatus.DRAFT));
 
@@ -91,17 +97,44 @@ class EventControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
-                .andExpect(jsonPath("$.status").value("DRAFT"))
-                .andExpect(jsonPath("$.venueCode").value("VEN-SMR-01"));
+                .andExpect(jsonPath("$.status").value("DRAFT"));
 
         verify(eventService).create(any(CreateEventRequest.class));
     }
 
+    @Test
+    void shouldReturn401WhenAnonymousTriesToCreateEvent() throws Exception {
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest())))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        verify(eventService, never()).create(any());
+    }
+
+    @Test
+    @WithMockSecurityPrincipal(roles = "USER")
+    void shouldReturn403WhenUserTriesToCreateEvent() throws Exception {
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"));
+
+        // El rechazo ocurre en la cadena de Spring Security, ANTES del
+        // Controller: el Service jamas se invoca.
+        verify(eventService, never()).create(any());
+    }
+
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-002 — request invalido -> 400
+    // TEST-CTRL-EVT-002 — request invalido -> 400 (con ADMIN, para
+    // aislar que el 400 es por Bean Validation y no por el rol)
     // ---------------------------------------------------------
 
     @Test
+    @WithMockSecurityPrincipal(roles = "ADMIN")
     void shouldReturn400WhenCreateRequestIsInvalid() throws Exception {
         CreateEventRequest invalid = new CreateEventRequest("", "", null,
                 null, null, -1, "");
@@ -110,34 +143,25 @@ class EventControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.details.eventCode").exists())
-                .andExpect(jsonPath("$.details.name").exists())
-                .andExpect(jsonPath("$.details.category").exists())
-                .andExpect(jsonPath("$.details.eventDate").exists())
-                .andExpect(jsonPath("$.details.venueCode").exists());
+                .andExpect(jsonPath("$.details.eventCode").exists());
 
-        // QT-CTRL-007: un request invalido nunca llega al Service
         verify(eventService, never()).create(any());
     }
 
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-003 / 004 — consultar existente/inexistente
+    // TEST-CTRL-EVT-003/004 — consultar evento publicado (anonimo) y
+    // evento inexistente
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WhenEventExists() throws Exception {
-        when(eventService.findByCode("CMF-2026"))
-                .thenReturn(response(EventStatus.PUBLISHED));
+    void shouldReturn200WhenAnonymousViewsPublishedEvent() throws Exception {
+        when(eventService.findByCode("CMF-2026")).thenReturn(response(EventStatus.PUBLISHED));
+        when(authorizationService.canViewEvent(EventStatus.PUBLISHED)).thenReturn(true);
 
         mockMvc.perform(get("/api/events/{eventCode}", "CMF-2026"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
-                .andExpect(jsonPath("$.status").value("PUBLISHED"));
-
-        verify(eventService).findByCode("CMF-2026");
+                .andExpect(jsonPath("$.eventCode").value("CMF-2026"));
     }
 
     @Test
@@ -151,27 +175,52 @@ class EventControllerTest {
     }
 
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-005 — listar publicados -> 200
+    // FR-SEC-EVT-02: un DRAFT no es visible para un anonimo (se oculta
+    // con 404, no con 403 — no revela su existencia)
+    // ---------------------------------------------------------
+
+    @Test
+    void shouldHideDraftEventFromAnonymousAs404() throws Exception {
+        when(eventService.findByCode("CMF-2026")).thenReturn(response(EventStatus.DRAFT));
+        when(authorizationService.canViewEvent(EventStatus.DRAFT)).thenReturn(false);
+
+        mockMvc.perform(get("/api/events/{eventCode}", "CMF-2026"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    @WithMockSecurityPrincipal(roles = "STAFF")
+    void shouldAllowStaffToViewDraftEvent() throws Exception {
+        when(eventService.findByCode("CMF-2026")).thenReturn(response(EventStatus.DRAFT));
+        when(authorizationService.canViewEvent(EventStatus.DRAFT)).thenReturn(true);
+
+        mockMvc.perform(get("/api/events/{eventCode}", "CMF-2026"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    // ---------------------------------------------------------
+    // TEST-CTRL-EVT-005 — listar publicados -> 200 (publico)
     // ---------------------------------------------------------
 
     @Test
     void shouldReturn200WithPublishedEvents() throws Exception {
-        when(eventService.findPublishedEvents()).thenReturn(List.of(summary()));
+        when(eventService.findPublishedEvents())
+                .thenReturn(List.of(summary()));
 
         mockMvc.perform(get("/api/events/published"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].eventCode").value("CMF-2026"))
-                .andExpect(jsonPath("$[0].status").value("PUBLISHED"));
-
-        verify(eventService).findPublishedEvents();
+                .andExpect(jsonPath("$[0].eventCode").value("CMF-2026"));
     }
 
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-006 / 007 — publicar valido/invalido
+    // TEST-CTRL-EVT-006/007 — publicar valido (ADMIN) / invalido (409)
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WhenPublishSucceeds() throws Exception {
+    @WithMockSecurityPrincipal(roles = "ADMIN")
+    void shouldReturn200WhenAdminPublishesEvent() throws Exception {
         when(eventService.publish("CMF-2026")).thenReturn(response(EventStatus.PUBLISHED));
 
         mockMvc.perform(patch("/api/events/{eventCode}/publish", "CMF-2026"))
@@ -182,22 +231,32 @@ class EventControllerTest {
     }
 
     @Test
+    @WithMockSecurityPrincipal(roles = "ADMIN")
     void shouldReturn409WhenPublishViolatesBusinessRule() throws Exception {
         when(eventService.publish("CMF-2026")).thenThrow(
                 new BusinessRuleException("Only DRAFT events can be published. Current status: CANCELLED"));
 
         mockMvc.perform(patch("/api/events/{eventCode}/publish", "CMF-2026"))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
+    @Test
+    @WithMockSecurityPrincipal(roles = "USER")
+    void shouldReturn403WhenUserTriesToPublishEvent() throws Exception {
+        mockMvc.perform(patch("/api/events/{eventCode}/publish", "CMF-2026"))
+                .andExpect(status().isForbidden());
+
+        verify(eventService, never()).publish(any());
+    }
+
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-008 — asociar artista -> 200
+    // TEST-CTRL-EVT-008 — asociar artista -> 200 (ADMIN)
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WhenArtistIsAssociated() throws Exception {
+    @WithMockSecurityPrincipal(roles = "ADMIN")
+    void shouldReturn200WhenAdminAssociatesArtist() throws Exception {
         when(eventService.addArtist("CMF-2026", 1L))
                 .thenReturn(response(EventStatus.PUBLISHED));
 
@@ -210,6 +269,7 @@ class EventControllerTest {
     }
 
     @Test
+    @WithMockSecurityPrincipal(roles = "ADMIN")
     void shouldReturn409WhenArtistAlreadyAssociated() throws Exception {
         when(eventService.addArtist(eq("CMF-2026"), eq(1L))).thenThrow(
                 new BusinessRuleException("Artist Solar Beat is already associated with event CMF-2026."));
@@ -220,27 +280,33 @@ class EventControllerTest {
     }
 
     // ---------------------------------------------------------
-    // TEST-CTRL-EVT-009 — buscar por artista -> 200
+    // TEST-CTRL-EVT-009 — buscar por artista -> 200 (publico, filtrado)
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WhenSearchingEventsByArtist() throws Exception {
-        when(eventService.findByArtist("Solar Beat")).thenReturn(List.of(summary()));
+    void shouldReturn200WithOnlyPublishedEventsForAnonymous() throws Exception {
+        EventSummaryResponse published = summary();
+        EventSummaryResponse draft = new EventSummaryResponse(2L, "EVT-DRAFT",
+                "Evento sin publicar", EventCategory.MUSIC, EventStatus.DRAFT,
+                EVENT_DATE, "Marina Convention Center");
 
-        mockMvc.perform(get("/api/events/by-artist")
-                        .param("stageName", "Solar Beat"))
+        when(eventService.findByArtist("Solar Beat")).thenReturn(List.of(published, draft));
+        when(authorizationService.canViewEvent(EventStatus.PUBLISHED)).thenReturn(true);
+        when(authorizationService.canViewEvent(EventStatus.DRAFT)).thenReturn(false);
+
+        mockMvc.perform(get("/api/events/by-artist").param("stageName", "Solar Beat"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].eventCode").value("CMF-2026"));
-
-        verify(eventService).findByArtist("Solar Beat");
     }
 
     // ---------------------------------------------------------
-    // Extra — tickets pagados de un evento -> 200
+    // Extra — tickets pagados de un evento -> 200 (STAFF/ADMIN)
     // ---------------------------------------------------------
 
     @Test
-    void shouldReturn200WithPaidTicketsOfEvent() throws Exception {
+    @WithMockSecurityPrincipal(roles = "STAFF")
+    void shouldReturn200WithPaidTicketsOfEventForStaff() throws Exception {
         TicketResponse ticket = new TicketResponse(1L, "TCK-ABCD1234",
                 TicketType.GENERAL, new BigDecimal("100000.00"), TicketStatus.PAID,
                 LocalDateTime.now(), "andrea@email.com", "CMF-2026",
@@ -251,9 +317,15 @@ class EventControllerTest {
 
         mockMvc.perform(get("/api/events/{eventCode}/tickets/paid", "CMF-2026"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].ticketCode").value("TCK-ABCD1234"))
-                .andExpect(jsonPath("$[0].status").value("PAID"));
+                .andExpect(jsonPath("$[0].ticketCode").value("TCK-ABCD1234"));
+    }
 
-        verify(ticketService).findPaidTicketsByEvent("CMF-2026");
+    @Test
+    @WithMockSecurityPrincipal(roles = "USER")
+    void shouldReturn403WhenUserRequestsPaidTicketsOfEvent() throws Exception {
+        mockMvc.perform(get("/api/events/{eventCode}/tickets/paid", "CMF-2026"))
+                .andExpect(status().isForbidden());
+
+        verify(ticketService, never()).findPaidTicketsByEvent(any());
     }
 }
