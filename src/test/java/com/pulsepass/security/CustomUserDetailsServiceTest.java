@@ -18,8 +18,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Seccion 17.1 del PRD: "usuario existente, inexistente, roles
@@ -37,14 +36,15 @@ class CustomUserDetailsServiceTest {
     @InjectMocks
     private CustomUserDetailsService service;
 
+
     private User userWith(Long id, String username, String email,
                           boolean active, Role... roles) {
         User user = mock(User.class);
-        when(user.getId()).thenReturn(id);
-        when(user.getUsername()).thenReturn(username);
-        when(user.getEmail()).thenReturn(email);
-        when(user.isActive()).thenReturn(active);
-        when(user.getRoles()).thenReturn(Set.of(roles));
+        lenient().when(user.getId()).thenReturn(id);
+        lenient().when(user.getUsername()).thenReturn(username);
+        lenient().when(user.getEmail()).thenReturn(email);
+        lenient().when(user.isActive()).thenReturn(active);
+        lenient().when(user.getRoles()).thenReturn(Set.of(roles));
         return user;
     }
 

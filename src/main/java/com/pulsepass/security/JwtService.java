@@ -1,5 +1,6 @@
 package com.pulsepass.security;
 
+import io.jsonwebtoken.io.DecodingException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -54,7 +55,7 @@ public class JwtService {
         byte[] keyBytes;
         try {
             keyBytes = Decoders.BASE64.decode(secretBase64);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | DecodingException ex) {
             throw new IllegalStateException(
                     "PULSEPASS_JWT_SECRET_BASE64 is not valid Base64.", ex);
         }

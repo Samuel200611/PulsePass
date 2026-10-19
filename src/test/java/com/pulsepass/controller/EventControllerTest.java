@@ -1,6 +1,6 @@
 package com.pulsepass.controller;
 
-import com.pulsepass.security.WithMockSecurityPrincipal;
+import com.pulsepass.security.*;
 import com.pulsepass.service.AuthorizationService;
 import tools.jackson.databind.ObjectMapper;
 import com.pulsepass.domain.EventCategory;
@@ -42,7 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(EventController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class,
+        RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
 
 class EventControllerTest {
 
@@ -60,6 +61,12 @@ class EventControllerTest {
 
     @MockitoBean
     private AuthorizationService authorizationService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     private static final LocalDateTime EVENT_DATE = LocalDateTime.now().plusMonths(3);
 

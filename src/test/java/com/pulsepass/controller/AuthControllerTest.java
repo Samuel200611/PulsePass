@@ -1,15 +1,17 @@
 package com.pulsepass.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.pulsepass.dto.request.LoginRequest;
 import com.pulsepass.dto.response.AuthResponse;
 import com.pulsepass.dto.response.AuthenticatedUserResponse;
+import com.pulsepass.exception.GlobalExceptionHandler;
 import com.pulsepass.exception.InvalidCredentialsException;
-import com.pulsepass.security.WithMockSecurityPrincipal;
+import com.pulsepass.security.*;
 import com.pulsepass.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * T-SEC-005/006 (seccion 17.2 del PRD de Seguridad).
  */
 @WebMvcTest(AuthController.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class,
+        RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
 class AuthControllerTest {
 
     @Autowired
@@ -38,6 +42,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     // ---------------------------------------------------------
     // T-SEC-005 — login correcto -> 200 con Bearer

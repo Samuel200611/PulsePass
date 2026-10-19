@@ -1,7 +1,7 @@
 package com.pulsepass.controller;
 
 import com.pulsepass.exception.GlobalExceptionHandler;
-import com.pulsepass.security.WithMockSecurityPrincipal;
+import com.pulsepass.security.*;
 import com.pulsepass.service.AuthorizationService;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,7 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(TicketController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class,
+        RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
 
 class TicketControllerTest {
 
@@ -50,6 +51,12 @@ class TicketControllerTest {
 
     @MockitoBean
     private AuthorizationService authorizationService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     private PurchaseTicketRequest validRequest() {
         return new PurchaseTicketRequest("andrea@email.com", "CMF-2026", TicketType.GENERAL);

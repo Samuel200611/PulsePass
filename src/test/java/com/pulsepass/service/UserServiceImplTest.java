@@ -48,7 +48,7 @@ class UserServiceImplTest {
 
     private RegisterUserRequest validRequest() {
         return new RegisterUserRequest("andrea", "andrea@email.com",
-                "Andrea", "Gomez", "3001112233", "Santa Marta",
+                "andreagomez123", "Andrea", "Gomez", "3001112233", "Santa Marta",
                 LocalDate.of(2001, 5, 12));
     }
 
@@ -129,7 +129,7 @@ class UserServiceImplTest {
     @Test
     void shouldRejectFutureBirthDate() {
         RegisterUserRequest futureBirthDate = new RegisterUserRequest(
-                "andrea", "andrea@email.com", "Andrea", "Gomez",
+                "andrea", "andrea@email.com", "andreagomez123","Andrea", "Gomez",
                 "3001112233", "Santa Marta", LocalDate.now().plusDays(1));
 
         when(userRepository.existsByUsername("andrea")).thenReturn(false);

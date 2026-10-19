@@ -1,7 +1,7 @@
 package com.pulsepass.controller;
 
 import com.pulsepass.exception.GlobalExceptionHandler;
-import com.pulsepass.security.WithMockSecurityPrincipal;
+import com.pulsepass.security.*;
 import com.pulsepass.service.AuthService;
 import com.pulsepass.service.AuthorizationService;
 import org.springframework.context.annotation.Import;
@@ -32,7 +32,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(UserController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class,
+        RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
 
 class UserControllerTest {
 
@@ -51,8 +52,14 @@ class UserControllerTest {
     @MockitoBean
     private AuthorizationService authorizationService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
+
     private RegisterUserRequest validRequest() {
-        return new RegisterUserRequest("andrea", "andrea@email.com",
+        return new RegisterUserRequest("andrea", "andrea@email.com", "andreagomez123",
                 "Andrea", "Gomez", "3001112233", "Santa Marta",
                 LocalDate.of(2001, 5, 12));
     }
@@ -69,7 +76,7 @@ class UserControllerTest {
 
     @Test
     void shouldReturn201WhenRegistrationSucceeds() throws Exception {
-        when(userService.register(any(RegisterUserRequest.class))).thenReturn(response());
+        when(authService.register(any(RegisterUserRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -145,7 +152,7 @@ class UserControllerTest {
 
     @Test
     void shouldReturn409WhenUsernameIsDuplicated() throws Exception {
-        when(userService.register(any(RegisterUserRequest.class)))
+        when(authService.register(any(RegisterUserRequest.class)))
                 .thenThrow(new DuplicateResourceException("Username already exists: andrea"));
 
         mockMvc.perform(post("/api/users")
@@ -176,6 +183,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockSecurityPrincipal(email = "andrea@email.com")
     void shouldReturn404WhenEmailDoesNotExist() throws Exception {
         when(userService.findByEmail("unknown@email.com"))
                 .thenThrow(new ResourceNotFoundException("User not found: unknown@email.com"));
