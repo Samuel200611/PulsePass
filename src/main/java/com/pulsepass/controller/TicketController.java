@@ -2,6 +2,7 @@ package com.pulsepass.controller;
 
 import com.pulsepass.dto.request.PurchaseTicketRequest;
 import com.pulsepass.dto.response.TicketResponse;
+import com.pulsepass.service.AuthorizationService;
 import com.pulsepass.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -23,17 +24,19 @@ import java.util.List;
 public class TicketController {
 
     private final TicketService ticketService;
-
-    public TicketController(TicketService ticketService) {
+    private final AuthorizationService authorizationService;
+    public TicketController(TicketService ticketService,
+                            AuthorizationService authorizationService) {
         this.ticketService = ticketService;
+        this.authorizationService = authorizationService;
     }
 
     //POST /api/tickets -> 201 Created.
-
-
     @PostMapping
     public ResponseEntity<TicketResponse> purchase(
             @Valid @RequestBody PurchaseTicketRequest request) {
+
+        authorizationService.assertSelfEmail(request.userEmail());
 
         TicketResponse response = ticketService.purchase(request);
 
@@ -43,19 +46,30 @@ public class TicketController {
     // GET /api/tickets/{ticketCode} -> 200 OK, o 404.
     @GetMapping("/{ticketCode}")
     public ResponseEntity<TicketResponse> findByCode(@PathVariable String ticketCode) {
-        return ResponseEntity.ok(ticketService.findByCode(ticketCode));
+        TicketResponse response = ticketService.findByCode(ticketCode);
+
+        authorizationService.assertSelfEmailOrStaffOrAdmin(response.userEmail());
+
+        return ResponseEntity.ok(response);
     }
 
     // GET /api/tickets/by-user?email=... -> 200 OK.
     @GetMapping("/by-user")
     public ResponseEntity<List<TicketResponse>> findByUserEmail(
             @RequestParam String email) {
+
+        authorizationService.assertSelfEmailOrAdmin(email);
+
         return ResponseEntity.ok(ticketService.findByUserEmail(email));
     }
-    //PATCH /api/tickets/{ticketCode}/cancel -> 200 OK, o 409
 
+    //PATCH /api/tickets/{ticketCode}/cancel -> 200 OK, o 409
     @PatchMapping("/{ticketCode}/cancel")
     public ResponseEntity<TicketResponse> cancel(@PathVariable String ticketCode) {
+        TicketResponse existing = ticketService.findByCode(ticketCode);
+
+        authorizationService.assertSelfEmailOrAdmin(existing.userEmail());
+
         return ResponseEntity.ok(ticketService.cancel(ticketCode));
     }
 
