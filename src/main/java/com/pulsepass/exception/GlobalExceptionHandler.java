@@ -4,6 +4,7 @@ import com.pulsepass.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,19 +14,12 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * CTRL-007 / CTRL-008: unico punto de traduccion entre excepciones de
- * dominio (o de Spring MVC) y respuestas HTTP (seccion 14/15 del PRD de
- * Controllers). Ningun Controller implementa try/catch propio: todo pasa
- * por aqui, y todos los handlers retornan ResponseEntity<ErrorResponse>.
- */
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // =====================================================
-    // 400 — Bean Validation (CTRL-005, AC-CTRL-004)
-    // Spring MVC lanza esta excepcion cuando @Valid falla en un
-    // @RequestBody; se captura antes de que la ejecucion llegue al Service.
+    // 400 — Bean Validation
     // =====================================================
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -42,7 +36,7 @@ public class GlobalExceptionHandler {
     }
 
     // =====================================================
-    // 400 — JSON mal formado (CTRL-005)
+    // 400 — JSON mal formado
     // =====================================================
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -63,6 +57,28 @@ public class GlobalExceptionHandler {
 
         return buildResponse(HttpStatus.NOT_FOUND, "Not Found",
                 ex.getMessage(), Map.of());
+    }
+
+    // =====================================================
+    // 401 — Credenciales invalidas
+    // =====================================================
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException ex) {
+
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Unauthorized",
+                ex.getMessage(), Map.of());
+    }
+
+    // =====================================================
+    // 403 — Rechazos de PROPIEDAD
+    // =====================================================
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException ex) {
+
+        return buildResponse(HttpStatus.FORBIDDEN, "Forbidden",
+                "No tiene permisos para realizar esta operación", Map.of());
     }
 
     // =====================================================
@@ -90,8 +106,7 @@ public class GlobalExceptionHandler {
     }
 
     // =====================================================
-    // 500 — Error inesperado (NFR-CTRL-007: sin stack traces ni
-    // detalles internos; mensaje generico fijo)
+    // 500 — Error inesperado
     // =====================================================
 
     @ExceptionHandler(Exception.class)

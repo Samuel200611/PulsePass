@@ -24,6 +24,10 @@ public record RegisterUserRequest(
         @Size(max = 150, message = "El email no puede superar los 150 caracteres")
         String email,
 
+        @NotBlank(message = "Password is required")
+        @Size(min = 12, max = 72, message = "Password must be between 12 and 72 characters")
+        String password,
+
         @NotBlank(message = "El nombre es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
         String firstName,

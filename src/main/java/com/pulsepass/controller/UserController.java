@@ -2,6 +2,8 @@ package com.pulsepass.controller;
 
 import com.pulsepass.dto.request.RegisterUserRequest;
 import com.pulsepass.dto.response.UserResponse;
+import com.pulsepass.service.AuthService;
+import com.pulsepass.service.AuthorizationService;
 import com.pulsepass.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,9 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService) {
+    private final AuthService authService;
+    private final AuthorizationService authorizationService;
+    public UserController(UserService userService,
+                          AuthService authService,
+                          AuthorizationService authorizationService) {
         this.userService = userService;
+        this.authService = authService;
+        this.authorizationService = authorizationService;
     }
 
     // POST /api/users -> 201 Created.
@@ -30,7 +37,7 @@ public class UserController {
     public ResponseEntity<UserResponse> register(
             @Valid @RequestBody RegisterUserRequest request) {
 
-        UserResponse response = userService.register(request);
+        UserResponse response = authService.register(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -38,6 +45,7 @@ public class UserController {
     //GET /api/users/by-email?email=... -> 200 OK, o 404.
     @GetMapping("/by-email")
     public ResponseEntity<UserResponse> findByEmail(@RequestParam String email) {
+        authorizationService.assertSelfEmailOrAdmin(email);
         return ResponseEntity.ok(userService.findByEmail(email));
     }
 
@@ -45,6 +53,7 @@ public class UserController {
     @GetMapping("/by-username")
     public ResponseEntity<UserResponse> findByUsername(
             @RequestParam String username) {
+        authorizationService.assertSelfUsernameOrAdmin(username);
         return ResponseEntity.ok(userService.findByUsername(username));
     }
 }

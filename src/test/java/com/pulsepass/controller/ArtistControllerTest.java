@@ -1,11 +1,14 @@
 package com.pulsepass.controller;
 
 import com.pulsepass.dto.response.ArtistResponse;
+import com.pulsepass.exception.GlobalExceptionHandler;
 import com.pulsepass.exception.ResourceNotFoundException;
+import com.pulsepass.security.*;
 import com.pulsepass.service.ArtistService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,6 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(ArtistController.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class,
+        RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
 class ArtistControllerTest {
 
     @Autowired
@@ -28,6 +33,12 @@ class ArtistControllerTest {
 
     @MockitoBean
     private ArtistService artistService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     private ArtistResponse response() {
         return new ArtistResponse(1L, "Solar Beat", "Colombia", "Electronic", true);

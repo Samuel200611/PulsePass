@@ -3,6 +3,7 @@ package com.pulsepass.controller;
 import com.pulsepass.dto.response.VenueResponse;
 import com.pulsepass.exception.GlobalExceptionHandler;
 import com.pulsepass.exception.ResourceNotFoundException;
+import com.pulsepass.security.*;
 import com.pulsepass.service.VenueService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @WebMvcTest(VenueController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class,
+        RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
 
 class VenueControllerTest {
 
@@ -32,6 +34,12 @@ class VenueControllerTest {
 
     @MockitoBean
     private VenueService venueService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     private VenueResponse response() {
         return new VenueResponse(1L, "VEN-SMR-01", "Marina Convention Center",
